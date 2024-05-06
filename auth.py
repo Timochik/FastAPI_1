@@ -1,6 +1,6 @@
-from  datetime import timedelta, datetime
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import timedelta, datetime
+from typing import Annotated, Optional
+from fastapi import APIRouter, HTTPException, Depends, status, Security, BackgroundTasks, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
@@ -9,6 +9,10 @@ from main import ContactInDB, ContactCreate, ContactUpdate
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
+from .models import Contact
+from .email import send_email
+from dotenv import dotenv_values
+
 
 SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://postgres:567234@localhost:5432/fastdb"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False})
@@ -19,11 +23,11 @@ router = APIRouter(
     tags=['auth']
 )
 
-SECRET_KEY = ''
+SECRET_KEY = 'secret_key'
 ALGORITHM = 'HS256'
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl = 'auth/token' )
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl = '/login' )
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -40,6 +44,7 @@ def get_db():
     finally:
         db.close()
 
+    
 db_dependency = Annotated[Session, Depends(get_db)]
 
 @router.post("/", status_code = status.HTTP_201_CREATED)
@@ -71,7 +76,7 @@ def authenticate_user(username: str, password: str, db):
      if not bcrypt_context.verify(password, user.hashed_password):
           return False
      return user
-    
+
 def create_access_token(username: str, user_id: int, expires_delta: timedelta):
      encode = {'sub': username, 'id': user_id}
      expires = datetime.now() + expires_delta
@@ -91,3 +96,27 @@ async def get_current_user(token:Annotated[str, Depends(oauth2_bearer)]):
          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                              detail = 'Could not validate user.')
 
+async def get_user_by_email(db: Session, email: str) -> Contact | None:
+     return db.query(Contact).filter(Contact).first()
+
+    
+async def confirmed_email(email: str, db: Session) -> None:
+    user = await get_current_user(email, db)
+    user.confirmed = True
+    db.commit()
+
+config_credential = dotenv_values(".env")
+
+async def very_token(token: str):
+    try:
+        payload = jwt.decode(token, config_credential['SECRET'], algorithms=['HS256'])
+        user = await Contact.get(id = payload.get("id"))
+
+    except:
+         raise HTTPException(
+              status_code = status.HTTP_401_UNAUTHORIZED,
+              detail = "Invalid token",
+              headers = {"WWW-Authenticate": "Bearer"}
+         )
+    return user
+    

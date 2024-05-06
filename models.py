@@ -13,3 +13,4 @@ class Contact(Base):
     phone_number = Column(String)
     birthday = Column(Date, nullable=True)
     additional_info = Column(String, nullable=True)
+    is_verified  = Column(bool, default=False)
