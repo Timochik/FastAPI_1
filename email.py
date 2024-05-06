@@ -1,16 +1,12 @@
 from pathlib import Path
-from fastapi import(BackgroundTasks, UploadFile, 
-                    File, Form, Depends, HTTPException, status)
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from dotenv import dotenv_values
-from pydantic import BaseModel, EmailStr
 from typing import List
 from .models import Contact
 import jwt
 
 from fastapi_mail.errors import ConnectionErrors
 from pydantic import EmailStr
-from .auth import auth_service
 
 config_credentials = dotenv_values(".env")
 

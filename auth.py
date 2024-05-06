@@ -1,16 +1,15 @@
 from datetime import timedelta, datetime
-from typing import Annotated, Optional
-from fastapi import APIRouter, HTTPException, Depends, status, Security, BackgroundTasks, Request
+from typing import Annotated
+from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy import create_engine
 from starlette import status
-from main import ContactInDB, ContactCreate, ContactUpdate
+from main import ContactInDB, ContactCreate
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
 from .models import Contact
-from .email import send_email
 from dotenv import dotenv_values
 
 

@@ -1,12 +1,12 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, status
-from sqlalchemy import create_engine, Column, Integer, String, Date
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
-from typing import List, Optional, Annotated
+from typing import List, Optional
 from datetime import date, timedelta
 from pydantic import BaseModel
 from models import Contact
 import auth
-from auth import get_current_user, very_token
+from auth import very_token
 
 from fastapi.responses import HTMLResponse
 
