@@ -10,6 +10,7 @@ from pydantic import EmailStr
 
 config_credentials = dotenv_values(".env")
 
+# Email connection configuration
 conf = ConnectionConfig(
     MAIL_USERNAME = config_credentials["EMAIL"],
     MAIL_PASSWORD = config_credentials["PASS"],
@@ -27,6 +28,15 @@ conf = ConnectionConfig(
 
 
 async def send_email(email: List, instance: Contact):
+    """Sends an email verification message to a list of recipients.
+
+    Args:
+        email (List[EmailStr]): A list of email addresses for the recipients.
+        instance (Contact): The Contact object containing user information for the email.
+
+    Raises:
+        ConnectionErrors: If there are issues connecting to the email server.
+    """
     token_data = {
         "id": instance.contact_id,
         "username": instance.first_name,
